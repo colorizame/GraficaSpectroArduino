@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+ <html>
+   <head>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" />
+    <link href='http://fonts.googleapis.com/css?family=ABeeZee' rel='stylesheet' type='text/css'>
+    <style>
+	body {
+		margin: 0px;
+		padding: 0px;
+        }
+	#rData{
+		float:left;
+		margin-left:100px;
+		margin-right:auto;
+		width:470px;
+	}
+	#sData{
+		float: left;
+		margin-left:100px;
+		margin-right:auto;
+		width:470px;
+	}
+	h2{
+		text-align:center;
+	}
+        #myCanvas {
+		border: 2px dashed grey;
+        }
+	#btnHolder, #sliderTxt{
+	text-align:center;
+	}
+  #cargando {
+    font-family: 'ABeeZee', sans-serif;
+    text-align: center;
+  }
+    </style>
+        <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+	<script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<script src="/socket.io/socket.io.js"></script>
+    <script>
+	var iosocket;
+  var svgContainer;
+  $(document).ready(function() {
+    svgContainer = d3.select("body").append("svg")
+                                        .attr("width", 1000)
+                                        .attr("height", 400)
+                                        .style("margin-left", 120);
+  });
+	function initSocketIO()
+	{
+		iosocket = io.connect();
+		iosocket.on('onconnection', function(value) {
+		//pollOneH = value.pollOneValue/2; // recieve start poll value from server
+		//initPoll();
+		//initButton();
+		//initSlider();
+
+		// recieve changed values by other client from server
+		iosocket.on('updateData', function (recievedData) {
+			console.log(recievedData);
+		});
+    iosocket.on('info', function (recievedData) {
+			console.log(recievedData);
+      var barras = svgContainer.selectAll("barras")
+                          .data(recievedData)
+                          .enter()
+                          .append("rect")
+                          .attr("x", function (d,i) {return i})
+                          .attr("y", function (d,i) {return 400-(d.val * 400 /1023)})
+                          .attr("width", 1)
+                          .attr("height", function (d,i) {return d.val * 400 /1023;})
+                          .style("fill", function (d,i) {return "rgba("+d.color+",1)";});
+      jQuery("#cargando h1").text("Informacion Recopilada..");
+      jQuery("#cargando p").text("Gracias por esperar.");
+		});
+	    });
+	}
+
+	window.onload = function() {
+	     initSocketIO();
+        };
+
+    </script>
+  </head>
+  <body>
+    <div id="cargando">
+      <h1>Recopilando Datos...</h1>
+      <p>Porfavor Espere</p>
+    </div>
+  </body>
+</html>
